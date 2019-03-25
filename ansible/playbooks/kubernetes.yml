@@ -1,0 +1,9 @@
+- hosts: all
+  gather_facts: true
+
+
+  tasks:
+
+    - name: kubernetes.yml --> Say hello
+      debug:
+        msg: "Hello Kubernetes!"

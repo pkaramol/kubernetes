@@ -1,0 +1,30 @@
+    - name: preflight_checks.yml --> Get master IP
+      set_fact:
+        master_ip: "{{ ansible_facts[if_name]['ipv4']['address'] }}"
+
+
+    - name: preflight_checks.yml --> Check if port 6443 is occupied
+      shell: "nc -zv -w 2 localhost 6443"
+      failed_when: false
+      register: rv_port_check
+
+
+    - name: preflight_checks.yml --> Check if cluster is already running and exit if so
+      command: "kubectl cluster-info"
+      failed_when: false
+      register: rv_cluster_info
+      environment:
+        KUBECONFIG: "/etc/kubernetes/admin.conf"
+      become: yes
+
+      
+    - pause:
+        prompt: "Port 6443 seems in use and / or kubernetes cluster already initialized! Proceed with resetting cluster? (Y/n)"
+      register: reset_cluster
+      when: rv_port_check.rc == 0 or (rv_cluster_info.rc == 0 and (rv_cluster_info.stdout | regex_replace('\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]', '') is search(cluster_running)))
+
+
+    - name: preflight_checks.yml --> Try to reset kubernetes cluster
+      shell: "kubeadm reset --force"
+      become: yes
+      # when: (reset_cluster | lower() == 'y') or (reset_cluster | lower() == 'yes')

@@ -1,0 +1,24 @@
+
+
+    # - name: nodes_setup.yml --> Copy the join command file
+    #   copy:
+    #     src: "{{ playbook_dir }}/join_command"
+    #     dest: "/tmp"
+    #     mode: '0770'
+  
+
+    - name: nodes_setup.yml --> WARNING - Resetting node
+      shell: "kubeadm reset --force"
+
+
+    - name: nodes_setup.yml --> Join the cluster
+      script: "{{ playbook_dir }}/join_command"
+  
+
+    - name: nodes_setup.yml --> Remove join_command file if existed
+      shell: "rm -rf {{ playbook_dir }}/join_command"
+      args:
+        warn: False
+      run_once: true
+      when: inventory_hostname in (groups['nodes'] | last)
+      delegate_to: localhost

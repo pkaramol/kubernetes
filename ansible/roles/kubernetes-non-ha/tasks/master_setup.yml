@@ -1,0 +1,62 @@
+    
+    - name: master_setup.yml --> Perform pre initialization checks
+      import_tasks: pre_init_checks.yml
+
+
+    - name: master_setup.yml --> Initiate kubernetes cluster
+      shell: "kubeadm init --pod-network-cidr={{ flannel_cidr }} --apiserver-advertise-address={{ ansible_facts[if_name]['ipv4']['address'] }}"
+      become: yes
+
+
+    - name: master_setup.yml --> Install Flannel
+      shell: "kubectl -n kube-system apply -f {{ flannel_manifest }}"
+      become: yes
+      environment:
+        KUBECONFIG: "/etc/kubernetes/admin.conf"
+
+
+    - name: master_setup.yml --> Install Admin Dashboard
+      shell: "kubectl -n kube-system apply -f {{ admin_dashboard_manifest }}"
+      become: yes
+      environment:
+        KUBECONFIG: "/etc/kubernetes/admin.conf"
+
+
+    - name: master_setup.yml --> Get username 
+      local_action: command whoami
+      register: local_user
+      run_once: True
+
+
+    - name: master_setup.yml --> Create kube directory
+      file:
+        path: "/home/{{ local_user.stdout }}/.kube"
+        state: directory
+        owner: "{{ local_user.stdout }}"
+        group: "{{ local_user.stdout }}"
+      delegate_to: localhost
+
+
+    - name: master_setup.yml --> Get master admin conf
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ local_user.stdout }}/.kube/config"
+        flat: yes
+      become: yes
+
+
+    - name: master_setup.yml --> Get the join command
+      shell: "kubeadm token create --print-join-command"
+      register: rv_join_command
+      become: yes
+
+
+    - name: master_setup.yml --> Print the join command
+      debug:
+        var: rv_join_command.stdout
+
+
+    - name: master_setup.yml --> Create join script
+      shell: "echo {{ rv_join_command.stdout | trim }} > {{ playbook_dir }}/join_command"
+      become: yes
+      delegate_to: localhost

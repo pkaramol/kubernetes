@@ -1,0 +1,87 @@
+
+    - name: prerequisites.yml --> Remove previous join_command file if any
+      shell: "rm -rf {{ playbook_dir }}/join_command"
+      args:
+        warn: False
+      when: inventory_hostname in (groups['masters'] | first)
+      delegate_to: localhost
+    
+        
+    - name: prerequisites.yml --> Install dependencies
+      apt:
+        update_cache: true
+        pkg: "{{ item }}"
+        state: latest
+      loop: "{{ dependencies }}"
+
+    - name: prerequisites.yml --> Check docker installation
+      shell: "docker info"
+      register: rv_docker_info
+      failed_when: false
+
+
+    - name: prerequisites.yml --> Skipping docker installation
+      debug:
+        msg: "Skipping docker installation as it is already installed ..."
+      when: rv_docker_info.rc == 0
+
+
+    - name: prerequisites.yml --> Performing docker installation
+
+      block:
+
+      - name: prerequisites.yml --> Remove previous docker installation(s)
+        apt:
+          pkg: "{{ item }}"
+          state: absent
+          update_cache: false
+        loop: "{{ deletions }}"
+
+
+      - name: prerequisites.yml --> Add docker gpg key
+        apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+
+      - name: prerequisites.yml --> Add docker repo
+        apt_repository:
+          repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    
+
+      - name: prerequisites.yml --> Refresh apt cache
+        apt:
+          update_cache: true
+
+
+      - name: prerequisites.yml --> Get exact docker package name
+        shell: "apt-cache madison docker-ce | grep {{ docker_version }} | head -1 | awk '{print $3}'"
+        register: docker_pkg_name
+
+
+      - name: prerequisites.yml --> Install docker
+        apt:
+          pkg: "docker-ce={{ docker_pkg_name.stdout }}"
+          update_cache: false
+
+      when: rv_docker_info.rc != 0
+
+
+    - name: prerequisites.yml --> Add kubernetes gpg key
+      apt_key:
+        url: "{{ google_apt_key }}"
+        state: present
+
+
+    - name: prerequisites.yml --> Add kubernetes repo
+      apt_repository:
+        repo: "deb http://apt.kubernetes.io/ kubernetes-{{ ansible_distribution_release }} main"
+        filename: kubernetes.list
+
+
+    - name: prerequisites.yml --> Install kubernetes packages
+      apt:
+        pkg: "{{ item }}"
+        update_cache: true
+        state: latest
+      loop: "{{ kubernetes_packs }}"

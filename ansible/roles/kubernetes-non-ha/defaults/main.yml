@@ -1,0 +1,31 @@
+---
+
+  docker_version: 18.09
+  if_name: enp0s8
+  flannel_cidr: '10.244.0.0/16'
+  flannel_manifest: https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+  admin_dashboard_manifest: https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
+  google_apt_key: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  reset_cluster: 'y'
+  cluster_running: "Kubernetes master is running at https://{{ master_ip }}:6443"
+  cluster_already_initialized_msg: "KUBERNETES CLUSTER RUNNING ON THIS MASTER... EXITING ... !"
+  port_occupied_msg: "PORT 6443 IS ALREADY IN USE ... EXITING ... !"
+  
+  
+  dependencies:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+
+  deletions:
+    - docker
+    - docker-engine
+    - docker.io
+    - containerd
+    - runc
+
+  kubernetes_packs:
+    - kubelet
+    - kubeadm
+    - kubectl

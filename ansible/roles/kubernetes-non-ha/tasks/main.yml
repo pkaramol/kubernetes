@@ -1,0 +1,11 @@
+---
+
+  - import_tasks: prerequisites.yml
+    become: yes
+
+  - import_tasks: master_setup.yml
+    when: inventory_hostname in groups['masters']
+    
+  - import_tasks: nodes_setup.yml
+    when: inventory_hostname in groups['nodes'] 
+    become: yes

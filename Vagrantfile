@@ -8,10 +8,10 @@ NODES = 2
 
 ansible_groups = {
   "masters" => [
-    "kubernetes.master.[1:#{MASTERS}]"
+    "kubernetes-master-[1:#{MASTERS}]"
   ],
   "nodes" => [
-    "kubernetes.node.[1:#{NODES}]"
+    "kubernetes-node-[1:#{NODES}]"
   ]
 }
 
@@ -30,7 +30,7 @@ Vagrant.configure("2") do |config|
   (1..MASTERS).each do |master_no|
     config.vm.define "kubernetes-master-#{master_no}" do |master|
       master.vm.hostname = "master-#{master_no}"
-      master.vm.network "private_network", ip: "192.168.33.#{master_no}"
+      master.vm.network "private_network", ip: "192.168.60.#{10+master_no}"
       master.vm.provider "virtualbox" do |vb|
         vb.cpus = "2"
         vb.memory = "4096"
@@ -40,7 +40,7 @@ Vagrant.configure("2") do |config|
       master.vm.provision "shell",
         inline: "test -e /usr/bin/python || (apt-get -qqy update && apt-get install -qqy python-minimal)"
       master.vm.provision "ansible" do |ansible|
-          ansible.playbook = "ansible/playbooks/kubernetes.yml"
+          ansible.playbook = "ansible/kubernetes.yml"
           ansible.groups = ansible_groups
           ansible.config_file = "ansible/ansible.cfg"
           # ansible.verbose = "True"
@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
   (1..NODES).each do |node_no|
     config.vm.define "kubernetes-node-#{node_no}" do |node|
       node.vm.hostname = "node-#{node_no}"
-      node.vm.network "private_network", ip: "192.168.33.#{node_no}"
+      node.vm.network "private_network", ip: "192.168.65.#{10+node_no}"
       node.vm.provider "virtualbox" do |vb|
         vb.cpus = "2"
         vb.memory = "4096"
@@ -60,10 +60,10 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell",
       inline: "test -e /usr/bin/python || (apt-get -qqy update && apt-get install -qqy python-minimal)"
     node.vm.provision "ansible" do |ansible|
-      ansible.playbook = "ansible/playbooks/kubernetes.yml"
+      ansible.playbook = "ansible/kubernetes.yml"
       ansible.groups = ansible_groups
       ansible.config_file = "ansible/ansible.cfg"
-      # ansible.verbose = "True"
+      ansible.verbose = "True"
     end
   end
   end

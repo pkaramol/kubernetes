@@ -17,6 +17,8 @@ non-single node (as provided by `microk8s` and `minikube`) `kubernetes` cluster;
 
 [__Vagrant__](https://www.vagrantup.com/docs/installation/)
 
+[__Vagrant Hostmanager Plugin__](https://github.com/devopsgroup-io/vagrant-hostmanager)
+
 [__Ansible__](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
 [__kubectl__](https://kubernetes.io/docs/tasks/tools/install-kubectl/)

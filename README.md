@@ -8,9 +8,6 @@ Provided that it works as expected, you can use it to set up locally a
 non-single node (as provided by `microk8s` and `minikube`) `kubernetes` cluster;
 
 
-## Prerequisites
-
-
 ##  Pre-Requisites (host machine)
 
 [__Virtualbox__](https://www.virtualbox.org/wiki/Linux_Downloads)
